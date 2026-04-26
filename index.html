@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Crypto Chat | PRO Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4a90e2; --dark: #2c3e50; --bg: #f0f2f5; --terminal: #121212; --msg-sent: #4a90e2; --msg-rec: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        nav { background: white; padding: 12px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 1000; flex-shrink: 0; }
+        .logo { font-size: 22px; font-weight: 600; color: var(--primary); cursor: pointer; }
+        .btn-nav { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; border: 1px solid #ddd; background: white; margin-left: 10px; font-size: 14px; }
+
+        .hidden { display: none !important; }
+
+        /* LANDING PAGE (Sadece landing açıkken body scroll olabilir) */
+        #landing-view { overflow-y: auto; flex: 1; }
+        .hero { text-align: center; padding: 80px 10%; background: white; }
+        .info-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; padding: 50px 10%; }
+        .info-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; }
+
+        /* AUTH CARDS */
+        .auth-container { display: flex; justify-content: center; align-items: center; flex: 1; background: #f0f2f5; }
+        .card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 360px; text-align: center; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-main { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* MAIN APP WRAPPER (Sabit Boyut) */
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 65px); }
+
+        /* SIDEBAR */
+        .sidebar { width: 280px; background: white; border-right: 1px solid #eee; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #eee; font-weight: 600; font-size: 16px; }
+        .user-item { padding: 15px 20px; border-bottom: 1px solid #f9f9f9; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+        .user-item:hover { background: #f8fbff; }
+        .user-item.active { background: #e3f2fd; border-left: 4px solid var(--primary); }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 600; color: white; }
+
+        /* CHAT AREA (Scrollable) */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #f9f9f9; min-width: 0; }
+        .chat-header { padding: 15px 25px; background: white; border-bottom: 1px solid #eee; font-weight: 600; flex-shrink: 0; }
+        .messages-display { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        
+        /* MSGS */
+        .msg { padding: 12px 18px; border-radius: 18px; max-width: 75%; font-size: 14.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); position: relative; }
+        .msg-received { background: white; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-sent { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-time { font-size: 9px; opacity: 0.5; display: block; margin-top: 5px; }
+
+        /* CIPHER STYLES */
+        .cipher-text { font-family: 'Fira Code', monospace; font-size: 10px; color: #888; word-break: break-all; background: #f0f0f0; padding: 8px; border-radius: 8px; display: block; margin-top: 5px; }
+        .decrypt-btn { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-size: 11px; cursor: pointer; margin-top: 8px; font-weight: 600; }
+
+        /* INPUT AREA (Sabit) */
+        .input-area { padding: 20px; background: white; border-top: 1px solid #eee; display: flex; gap: 12px; flex-shrink: 0; }
+        input#msg-input { margin-bottom: 0; border-radius: 25px; padding: 12px 20px; flex: 1; }
+        .send-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 18px; flex-shrink: 0; }
+
+        /* TERMINAL (RIGHT) */
+        .crypto-log { width: 320px; background: var(--terminal); color: #ccc; font-family: 'Fira Code', monospace; font-size: 10px; display: flex; flex-direction: column; border-left: 1px solid #333; flex-shrink: 0; }
+        .log-header { padding: 12px; background: #1a1a1a; color: #4af626; font-weight: 600; border-bottom: 1px solid #333; }
+        .log-content { flex: 1; overflow-y: auto; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo" onclick="showView('landing-view')">RSA Crypto Chat</div>
+    <div id="nav-auth">
+        <button class="btn-nav" onclick="showView('login-view')">Giriş Yap</button>
+        <button class="btn-nav" style="background:var(--primary); color:white; border:none" onclick="showView('register-view')">Kayıt Ol</button>
+    </div>
+    <div id="nav-user" class="hidden">
+        <span id="nav-username" style="font-weight:600"></span>
+        <button class="btn-nav" onclick="location.reload()" style="color:red">Çıkış</button>
+    </div>
+</nav>
+
+<div id="landing-view">
+    <section class="hero">
+        <h1>Uçtan Uca RSA Şifreli Sohbet.</h1>
+        <p>Mesajlarınız daha cihazınızdan çıkmadan matematiksel olarak mühürlenir. Arka planda çalışan kripto motorunu terminalden anlık izleyebilirsiniz.</p>
+        <button class="btn-main" style="width: 220px; margin: 0 auto;" onclick="showView('register-view')">Başla</button>
+    </section>
+    <section class="info-section">
+        <div class="info-card"><h3>🔐 Private Key</h3><p>Sadece sizin cihazınızda yaşar.</p></div>
+        <div class="info-card"><h3>⚛️ RSA-2048</h3><p>Kırılamaz asimetrik koruma.</p></div>
+        <div class="info-card"><h3>🖥️ Terminal</h3><p>Kripto adımlarını izleyin.</p></div>
+    </section>
+</div>
+
+<div id="login-view" class="auth-container hidden">
+    <div class="card">
+        <h2>Giriş Yap</h2>
+        <input type="text" id="login-user" placeholder="Kullanıcı Adı">
+        <input type="password" id="login-pass" placeholder="Şifre">
+        <button class="btn-main" onclick="login()">Sisteme Gir</button>
+    </div>
+</div>
+
+<div id="register-view" class="auth-container hidden">
+    <div class="card">
+        <h2>Yeni Kayıt</h2>
+        <input type="text" id="reg-user" placeholder="Kullanıcı Adı">
+        <input type="password" id="reg-pass" placeholder="Şifre">
+        <button class="btn-main" onclick="register()">Kaydol ve Üret</button>
+    </div>
+</div>
+
+<div id="chat-view" class="main-wrapper hidden">
+    <div class="sidebar">
+        <div class="sidebar-header">Sohbet Geçmişi</div>
+        <div id="user-list" style="overflow-y:auto; flex:1;"></div>
+    </div>
+    <div class="chat-area">
+        <div id="chat-header" class="chat-header">Bir sohbet seçin</div>
+        <div class="messages-display" id="msg-container"></div>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Mühürlenecek mesaj...">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+    <div class="crypto-log">
+        <div class="log-header">CRYPTO ENGINE PRO</div>
+        <div class="log-content" id="log-content"></div>
+    </div>
+</div>
+
+<script>
+    const API_URL = window.location.origin;
+    let myKeys = null;
+    let currentUser = null;
+    let activeTarget = null;
+    let activePubKey = null;
+
+    function showView(viewId) {
+        ['landing-view', 'login-view', 'register-view', 'chat-view'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(viewId).classList.remove('hidden');
+        if(viewId === 'chat-view') {
+            document.getElementById('nav-auth').classList.add('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+        }
+    }
+
+    function addLog(tag, action) {
+        const container = document.getElementById('log-content');
+        const entry = document.createElement('div');
+        const ts = new Date().toLocaleTimeString('tr-TR', {hour12:false});
+        entry.innerHTML = `<div style="margin-bottom:8px; border-left:2px solid #444; padding-left:8px;"><span style="color:#555">[${ts}]</span> <b style="color:#00d4ff">[${tag}]</b> ${action}</div>`;
+        container.appendChild(entry);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function register() {
+        const user = document.getElementById('reg-user').value;
+        const pass = document.getElementById('reg-pass').value;
+        if(!user || !pass) return;
+
+        myKeys = await window.crypto.subtle.generateKey(
+            { name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+            true, ["encrypt", "decrypt"]
+        );
+        const pubExp = await window.crypto.subtle.exportKey("spki", myKeys.publicKey);
+        const pubB64 = btoa(String.fromCharCode(...new Uint8Array(pubExp)));
+        const privJWK = await window.crypto.subtle.exportKey("jwk", myKeys.privateKey);
+        
+        localStorage.setItem(`rsa_priv_${user}`, JSON.stringify(privJWK));
+        localStorage.setItem(`rsa_pub_${user}`, pubB64);
+
+        const res = await fetch(`${API_URL}/register`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username: user, password: pass, public_key: pubB64 })
+        });
+        if(res.ok) loginSuccess(user);
+    }
+
+    async function login() {
+        const user = document.getElementById('login-user').value;
+        const pass = document.getElementById('login-pass').value;
+        const res = await fetch(`${API_URL}/login`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        if(!res.ok) return alert("Hatalı Giriş!");
+        const privData = localStorage.getItem(`rsa_priv_${user}`);
+        if(!privData) return alert("Anahtar bulunamadı!");
+        myKeys = { privateKey: await window.crypto.subtle.importKey("jwk", JSON.parse(privData), { name: "RSA-OAEP", hash: "SHA-256" }, true, ["decrypt"]) };
+        loginSuccess(user);
+    }
+
+    function loginSuccess(user) {
+        currentUser = user;
+        document.getElementById('nav-username').innerText = user;
+        showView('chat-view');
+        refreshUserList();
+        setInterval(fetchMessages, 3000);
+        addLog("SYS", "Oturum doğrulandı.");
+    }
+
+    async function refreshUserList() {
+        const users = await (await fetch(`${API_URL}/users`)).json();
+        const list = document.getElementById('user-list');
+        list.innerHTML = "";
+        users.filter(u => u.username !== currentUser).forEach(u => {
+            const div = document.createElement('div');
+            div.className = "user-item";
+            div.onclick = () => selectUser(u.username, u.public_key, div);
+            const color = `hsl(${Math.abs(u.username.split("").reduce((a,b)=>a+b.charCodeAt(0),0)) % 360}, 65%, 50%)`;
+            div.innerHTML = `<div class="avatar" style="background:${color}">${u.username[0].toUpperCase()}</div><div>${u.username}</div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function selectUser(name, pubKey, el) {
+        activeTarget = name;
+        activePubKey = pubKey;
+        document.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('chat-header').innerText = `# ${name}`;
+        fetchMessages();
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('msg-input');
+        const text = input.value;
+        if(!text || !activePubKey) return;
+
+        addLog("ENC", "Mühürleniyor...");
+        const binPub = Uint8Array.from(atob(activePubKey), c => c.charCodeAt(0));
+        const pubKey = await window.crypto.subtle.importKey("spki", binPub, { name: "RSA-OAEP", hash: "SHA-256" }, true, ["encrypt"]);
+        const enc = await window.crypto.subtle.encrypt({ name: "RSA-OAEP" }, pubKey, new TextEncoder().encode(text));
+        const encB64 = btoa(String.fromCharCode(...new Uint8Array(enc)));
+
+        let history = JSON.parse(localStorage.getItem(`chat_history_${currentUser}`) || "[]");
+        history.push({ content: encB64, plain: text });
+        localStorage.setItem(`chat_history_${currentUser}`, JSON.stringify(history));
+
+        await fetch(`${API_URL}/send`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ sender: currentUser, receiver: activeTarget, encrypted_content: encB64 })
+        });
+        input.value = "";
+        fetchMessages();
+    }
+
+    async function decryptMessage(btn, cipherText) {
+        addLog("DEC", "RSA süreci...");
+        try {
+            const bin = Uint8Array.from(atob(cipherText), c => c.charCodeAt(0));
+            const dec = await window.crypto.subtle.decrypt({ name: "RSA-OAEP" }, myKeys.privateKey, bin);
+            const text = new TextDecoder().decode(dec);
+            btn.parentElement.innerHTML = `<b style="color:var(--primary)"># </b> ${text}`;
+            addLog("OK", "Çözüldü.");
+        } catch(e) { alert("Hata!"); }
+    }
+
+    async function fetchMessages() {
+        if(!activeTarget) return;
+        const res = await fetch(`${API_URL}/messages/${currentUser}`);
+        const messages = await res.json();
+        const container = document.getElementById('msg-container');
+        const history = JSON.parse(localStorage.getItem(`chat_history_${currentUser}`) || "[]");
+        const conversation = messages.filter(m => (m.sender === currentUser && m.receiver === activeTarget) || (m.sender === activeTarget && m.receiver === currentUser));
+
+        if(container.dataset.count == conversation.length) return;
+        container.dataset.count = conversation.length;
+        container.innerHTML = "";
+
+        for (const m of conversation) {
+            const isOwn = m.sender === currentUser;
+            const div = document.createElement('div');
+            div.className = `msg ${isOwn ? 'msg-sent' : 'msg-received'}`;
+            if(isOwn) {
+                const cached = history.find(h => h.content === m.encrypted_content);
+                div.innerHTML = `${cached ? cached.plain : '---'} <span class="msg-time" style="color:rgba(255,255,255,0.6)">${m.timestamp}</span>`;
+            } else {
+                div.innerHTML = `<div style="font-size:11px; color:#666;">Mühürlü:</div><code class="cipher-text">${m.encrypted_content.substring(0,40)}...</code><button class="decrypt-btn" onclick="decryptMessage(this, '${m.encrypted_content}')">Mührü Aç</button><span class="msg-time">${m.timestamp}</span>`;
+            }
+            container.appendChild(div);
+        }
+        container.scrollTop = container.scrollHeight;
+    }
+</script>
+</body>
+</html>
