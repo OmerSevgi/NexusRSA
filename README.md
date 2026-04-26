@@ -43,8 +43,6 @@ Projeyi yerel makinenizde çalıştırmak için:
    http://127.0.0.1:5000
    ```
 
-## 📸 Ekran Görüntüleri
-*(Buraya uygulamanın ve özellikle Kripto Terminali'nin ekran görüntülerini ekleyebilirsiniz)*
 
 ## 📜 Lisans
 Bu proje eğitim amaçlı geliştirilmiştir ve açık kaynak kodludur.
